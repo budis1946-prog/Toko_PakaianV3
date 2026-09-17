@@ -59,26 +59,73 @@ async function loadProducts() {
  * RENDER
  ************************************************/
 
+/************************************************
+ * RENDER PRODUCTS
+ * Summary mengikuti data yang tampil
+ ************************************************/
+
 function renderProducts() {
-  const container = document.getElementById("productContainer");
 
-  const search = document
-    .getElementById("searchInput")
-    .value.toLowerCase()
-    .trim();
+    const container =
+        document.getElementById(
+            "productContainer"
+        );
 
-  const status = document.getElementById("statusFilter").value;
+    const search =
+        document
+            .getElementById("searchInput")
+            .value
+            .toLowerCase()
+            .trim();
 
-  let filtered = products.filter(function (product) {
-    const cocokNama = product.nama.toLowerCase().includes(search);
+    const status =
+        document
+            .getElementById("statusFilter")
+            .value;
 
-    const cocokStatus = status === "ALL" || product.status === status;
 
-    return cocokNama && cocokStatus;
-  });
+    /*
+     * FILTER DATA
+     *
+     * Pencarian nama +
+     * filter status
+     */
 
-  if (filtered.length === 0) {
-    container.innerHTML = `
+    const filtered =
+        products.filter(function(product) {
+
+            const cocokNama =
+                String(product.nama || "")
+                    .toLowerCase()
+                    .includes(search);
+
+
+            const cocokStatus =
+                status === "ALL" ||
+                product.status === status;
+
+
+            return cocokNama &&
+                   cocokStatus;
+
+        });
+
+
+    /*
+     * SUMMARY MENGIKUTI
+     * DATA YANG TAMPIL
+     */
+
+    updateDashboard(filtered);
+
+
+    /*
+     * JIKA TIDAK ADA DATA
+     */
+
+    if (filtered.length === 0) {
+
+        container.innerHTML = `
 
             <div class="empty">
 
@@ -91,25 +138,34 @@ function renderProducts() {
                 </h3>
 
                 <p>
-                    Belum ada produk yang sesuai.
+                    Tidak ada produk yang sesuai
+                    dengan filter.
                 </p>
 
             </div>
 
         `;
 
-    updateDashboard();
+        return;
 
-    return;
-  }
+    }
 
-  container.innerHTML = filtered
-    .map(function (product) {
-      return createProductHTML(product);
-    })
-    .join("");
 
-  updateDashboard();
+    /*
+     * TAMPILKAN DATA
+     */
+
+    container.innerHTML =
+        filtered
+            .map(function(product) {
+
+                return createProductHTML(
+                    product
+                );
+
+            })
+            .join("");
+
 }
 
 /************************************************
@@ -251,51 +307,168 @@ function createProductHTML(product) {
  * DASHBOARD
  ************************************************/
 
-function updateDashboard() {
-  const total = products.length;
+/************************************************
+ * UPDATE DASHBOARD
+ *
+ * Menerima data yang sedang ditampilkan
+ ************************************************/
 
-  const ready = products.filter((p) => p.status === "READY").length;
+function updateDashboard(data = products) {
 
-  const sold = products.filter((p) => p.status === "SOLD").length;
+    /*
+     * TOTAL PRODUK
+     */
 
-  /*
-   * Total modal seluruh barang,
-   * termasuk barang yang sudah SOLD.
-   */
+    const total =
+        data.length;
 
-  const totalModal = products.reduce(
-    (sum, p) => sum + Number(p.hargaBeli || 0),
-    0,
-  );
 
-  /*
-   * Penjualan hanya barang SOLD.
-   */
+    /*
+     * READY
+     */
 
-  const totalPenjualan = products
-    .filter((p) => p.status === "SOLD")
-    .reduce((sum, p) => sum + Number(p.hargaJual || 0), 0);
+    const ready =
+        data.filter(
+            function(product) {
 
-  /*
-   * Profit hanya barang SOLD.
-   */
+                return product.status === "READY";
 
-  const totalProfit = products
-    .filter((p) => p.status === "SOLD")
-    .reduce((sum, p) => sum + Number(p.profit || 0), 0);
+            }
+        ).length;
 
-  document.getElementById("totalProduk").textContent = total;
 
-  document.getElementById("totalReady").textContent = ready;
+    /*
+     * SOLD
+     */
 
-  document.getElementById("totalSold").textContent = sold;
+    const sold =
+        data.filter(
+            function(product) {
 
-  document.getElementById("totalModal").textContent = rupiah(totalModal);
+                return product.status === "SOLD";
 
-  document.getElementById("totalPenjualan").textContent =
-    rupiah(totalPenjualan);
+            }
+        ).length;
 
-  document.getElementById("totalProfit").textContent = rupiah(totalProfit);
+
+    /*
+     * TOTAL MODAL
+     *
+     * Semua barang yang sedang tampil,
+     * termasuk SOLD.
+     */
+
+    const totalModal =
+        data.reduce(
+            function(sum, product) {
+
+                return sum +
+                    Number(
+                        product.hargaBeli || 0
+                    );
+
+            },
+            0
+        );
+
+
+    /*
+     * TOTAL PENJUALAN
+     *
+     * Hanya produk SOLD
+     * yang sedang tampil.
+     */
+
+    const totalPenjualan =
+        data
+            .filter(
+                function(product) {
+
+                    return product.status === "SOLD";
+
+                }
+            )
+            .reduce(
+                function(sum, product) {
+
+                    return sum +
+                        Number(
+                            product.hargaJual || 0
+                        );
+
+                },
+                0
+            );
+
+
+    /*
+     * TOTAL PROFIT
+     *
+     * Hanya produk SOLD
+     * yang sedang tampil.
+     */
+
+    const totalProfit =
+        data
+            .filter(
+                function(product) {
+
+                    return product.status === "SOLD";
+
+                }
+            )
+            .reduce(
+                function(sum, product) {
+
+                    return sum +
+                        Number(
+                            product.profit || 0
+                        );
+
+                },
+                0
+            );
+
+
+    /*
+     * TAMPILKAN KE DASHBOARD
+     */
+
+    document.getElementById(
+        "totalProduk"
+    ).textContent =
+        total;
+
+
+    document.getElementById(
+        "totalReady"
+    ).textContent =
+        ready;
+
+
+    document.getElementById(
+        "totalSold"
+    ).textContent =
+        sold;
+
+
+    document.getElementById(
+        "totalModal"
+    ).textContent =
+        rupiah(totalModal);
+
+
+    document.getElementById(
+        "totalPenjualan"
+    ).textContent =
+        rupiah(totalPenjualan);
+
+
+    document.getElementById(
+        "totalProfit"
+    ).textContent =
+        rupiah(totalProfit);
+
 }
 
 /************************************************
